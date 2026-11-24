@@ -249,10 +249,15 @@ def align(
             if model_type == "torchaudio":
                 emissions, _ = model(waveform_segment.to(device), lengths=lengths)
             elif model_type == "huggingface":
-                emissions = model(waveform_segment.to(device)).logits
+                output = model(waveform_segment.to(device))
             else:
                 raise NotImplementedError(f"Align model of type {model_type} not supported.")
-            emissions = torch.log_softmax(emissions, dim=-1)
+            if model_type == "huggingface" and getattr(output, "log_probs", None) is not None:
+                emissions = output.log_probs
+            else:
+                if model_type == "huggingface":
+                    emissions = output.logits
+                emissions = torch.log_softmax(emissions, dim=-1)
 
         emission = emissions[0].cpu().detach()
 
