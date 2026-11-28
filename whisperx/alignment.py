@@ -8,7 +8,6 @@ from typing import Iterable, Optional, Union, List
 import numpy as np
 import pandas as pd
 import torch
-import torchaudio
 from transformers import Wav2Vec2ForCTC, Wav2Vec2Processor
 
 from whisperx.audio import SAMPLE_RATE, load_audio
@@ -88,7 +87,13 @@ def load_align_model(language_code: str, device: str, model_name: Optional[str] 
                          f"then pass the model name via --align_model [MODEL_NAME]")
             raise ValueError(f"No default align-model for language: {language_code}")
 
-    if model_name in torchaudio.pipelines.__all__:
+    # torchaudio is needed only for its own pipelines; Hugging Face models load without it.
+    try:
+        import torchaudio
+        torchaudio_pipelines = torchaudio.pipelines.__all__
+    except ImportError:
+        torchaudio_pipelines = []
+    if model_name in torchaudio_pipelines:
         pipeline_type = "torchaudio"
         bundle = torchaudio.pipelines.__dict__[model_name]
         align_model = bundle.get_model(dl_kwargs={"model_dir": model_dir}).to(device)

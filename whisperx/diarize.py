@@ -1,6 +1,5 @@
 import numpy as np
 import pandas as pd
-from pyannote.audio import Pipeline
 from typing import Optional, Union, List, Tuple
 import torch
 
@@ -98,6 +97,8 @@ class DiarizationPipeline:
     ):
         if isinstance(device, str):
             device = torch.device(device)
+        from pyannote.audio import Pipeline
+
         model_config = model_name or "pyannote/speaker-diarization-community-1"
         logger.info(f"Loading diarization model: {model_config}")
         self.model = Pipeline.from_pretrained(model_config, token=token, cache_dir=cache_dir).to(device)
